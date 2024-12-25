@@ -1,20 +1,20 @@
-# Use an official Node.js runtime as the base image
-FROM node:19-alpine
+# Use an official Python runtime as a parent image
+FROM python:3.9-slim
 
-# Set the working directory inside the container
-WORKDIR /usr/app
+# Set the working directory in the container
+WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json to the working directory
-COPY package*.json ./
+# Copy the current directory contents into the container at /usr/src/app
+COPY . .
 
-# Install app dependencies
-RUN npm install
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application source code to the working directory
-COPY src ./src
+# Make port 5000 available to the world outside this container
+EXPOSE 5000
 
-# Expose the port the app runs on (optional, based on your app's configuration)
-EXPOSE 3000
+# Define environment variable
+ENV FLASK_APP=app.py
 
-# Command to run the application
-CMD ["node", "src/server.js"]
+# Run app.py when the container launches
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5000"]
