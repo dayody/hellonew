@@ -71,7 +71,3 @@ jobs:
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
           aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin $ECR_REGISTRY
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-
-      - name: Update ECS Service
-        run: |
-          aws ecs update-service --cluster example-cluster --service example-service --force-new-deployment
