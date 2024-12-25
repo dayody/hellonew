@@ -1,0 +1,46 @@
+name: Deploy Application
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    name: Deploy Infrastructure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      - name: Initialize Terraform
+        run: terraform init
+
+      - name: Apply Terraform
+        run: terraform apply -auto-approve
+
+  app:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t hello-world-app .
+          docker tag hello-world-app:latest <AWS_ECR_URL>/hello-world-app:latest
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <AWS_ECR_URL>
+          docker push <AWS_ECR_URL>/hello-world-app:latest
+
+      - name: Update ECS Service
+        run: |
+          aws ecs update-service --cluster example-cluster --service example-service --force-new-deployment
