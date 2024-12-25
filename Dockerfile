@@ -1,17 +1,20 @@
+# Use an official Node.js runtime as the base image
 FROM node:19-alpine
 
-# Copy package.json, wildcard used so both package.json AND package-lock.json are copied
-# slash '/' at the end of app is important, so it created an app directory, otherwise you'll get an error
-COPY package*.json /usr/app/
-
-# Copy app files from src directory
-COPY src /usr/app/
-
-# Create app directory & set default dir so that next commands executes in /usr/app dir, liked cd-ing into /usr/app to execute npm install
+# Set the working directory inside the container
 WORKDIR /usr/app
+
+# Copy package.json and package-lock.json to the working directory
+COPY package*.json ./
 
 # Install app dependencies
 RUN npm install
 
-# Start the application
-CMD ["node", "server.js"]
+# Copy the rest of the application source code to the working directory
+COPY src ./src
+
+# Expose the port the app runs on (optional, based on your app's configuration)
+EXPOSE 3000
+
+# Command to run the application
+CMD ["node", "src/server.js"]
