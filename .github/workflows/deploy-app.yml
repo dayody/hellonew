@@ -62,9 +62,14 @@ jobs:
         env:
           ECR_REPOSITORY: hellonew
 
+      - name: Create ECS Cluster
+        run: |
+          aws ecs describe-clusters --clusters hello-cluster --region eu-west-2 || \
+          aws ecs create-cluster --cluster-name hello-cluster --region eu-west-2
+
       - name: Deploy to ECS
         run: |
-          aws ecs update-service --cluster example-cluster --service example-service --force-new-deployment
+          aws ecs update-service --cluster hello-cluster --service hello-service --force-new-deployment --region eu-west-2
 
   sast:
     name: Security Tests
