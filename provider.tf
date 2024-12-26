@@ -11,38 +11,46 @@ provider "aws" {
   region     = "eu-west-2"
 }
 
+# VPC
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 }
 
+# Subnet
 resource "aws_subnet" "subnet" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = "eu-west-2a"
 }
 
-resource "aws_security_group" "allow_tls" {
-  name        = "allow_tls"
-  description = "Allow TLS inbound traffic and all outbound traffic"
-  vpc_id      = aws_vpc.main.id
+# Security Group for ECS Instances
+resource "aws_security_group" "ecs" {
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   tags = {
-    Name = "allow_tls"
+    Name = "ecs_security_group"
   }
-}
-
-resource "aws_vpc_security_group_ingress_rule" "allow_tls_ipv4" {
-  security_group_id = aws_security_group.allow_tls.id
-  cidr_ipv4         = aws_vpc.main.cidr_block
-  from_port         = 443
-  ip_protocol       = "tcp"
-  to_port           = 443
-}
-
-resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
-  security_group_id = aws_security_group.allow_tls.id
-  cidr_ipv4         = "0.0.0.0/0"
-  ip_protocol       = "-1" # semantically equivalent to all ports
 }
 
 # ECS Cluster
@@ -100,7 +108,7 @@ resource "aws_instance" "ecs_instances" {
   ami           = "ami-05c172c7f0d3aed00" # Amazon Linux 2 AMI
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.subnet.id
-  security_groups = [aws_security_group.ecs.name]
+  security_groups = [aws_security_group.ecs.id]
 
   user_data = <<-EOF
               #!/bin/bash
@@ -125,4 +133,3 @@ resource "aws_ecs_service" "hello_service" {
     assign_public_ip = true
   }
 }
-
