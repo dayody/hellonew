@@ -43,3 +43,6 @@ jobs:
           find tfsec_temp -name tfsec -exec mv {} /usr/local/bin/tfsec \;
           rm -rf tfsec_temp tfsec.tar.gz
           tfsec --version
+
+      - name: Run tfsec (Terraform Security Scanner)
+        run: tfsec
