@@ -11,25 +11,22 @@ provider "aws" {
   region     = "eu-west-2"
 }
 
-resource "aws_instance" "example" {
-  ami           = "ami-05c172c7f0d3aed00" # Ubuntu AMI
-  instance_type = "t2.micro"
-
-  tags = {
-    Name = "HelloWorldInstance"
-  }
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
 }
 
-output "instance_public_ip" {
-  value = aws_instance.example.public_ip
+resource "aws_subnet" "subnet" {
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = "eu-west-2a"
 }
 
-resource "aws_security_group" "allow_http" {
-  name_prefix = "allow_http"
-  description = "Allow HTTP traffic"
+resource "aws_security_group" "ecs" {
+  vpc_id = aws_vpc.main.id
+
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = 8080
+    to_port     = 8080
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -40,4 +37,30 @@ resource "aws_security_group" "allow_http" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+resource "aws_ecs_cluster" "main" {
+  name = "hello-cluster"
+}
+
+resource "aws_ecs_task_definition" "hello_task" {
+  family                   = "hello-task"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = jsonencode([
+    {
+      name      = "hello-app"
+      image     = "your-docker-image-url"
+      essential = true
+      portMappings = [
+        {
+          containerPort = 80
+          hostPort      = 80
+        }
+      ]
+    }
+  ])
 }
