@@ -35,9 +35,11 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve
       
-      - name: Run TFSec (Terraform Security Scanner)
+      - name: Download and Set Up TFSec
         run: |
           curl -L "$(curl -s https://api.github.com/repos/aquasecurity/tfsec/releases/latest | grep -o -E "https://.+?_linux_amd64.tar.gz")" -o tfsec.tar.gz
-          mkdir tfsec && tar -xzf tfsec.tar.gz -C tfsec --strip-components=1
-          sudo mv tfsec/tfsec /usr/local/bin/tfsec
-          tfsec .
+          mkdir tfsec_temp
+          tar -xzf tfsec.tar.gz -C tfsec_temp
+          find tfsec_temp -name tfsec -exec mv {} /usr/local/bin/tfsec \;
+          rm -rf tfsec_temp tfsec.tar.gz
+          tfsec --version
