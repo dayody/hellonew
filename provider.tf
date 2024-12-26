@@ -1,3 +1,6 @@
+provider "aws" {
+  region = "eu-west-2"
+}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
@@ -47,28 +50,24 @@ resource "aws_security_group" "ecs" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
- ingress {
+  ingress {
     from_port   = 3000
     to_port     = 3000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
- ingress {
+  ingress {
     from_port   = 5000
     to_port     = 5000
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
- ingress {
+  ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   ingress {
     from_port   = 443
     to_port     = 443
@@ -87,11 +86,11 @@ resource "aws_security_group" "ecs" {
 }
 
 resource "aws_ecs_cluster" "main" {
-  name = "ecs-cluster"
+  name = "hello-cluster"
 }
 
-resource "aws_iam_role" "ecs_task_execution_role_alternate" {
-  name = "ecsTaskExecutionRoleAlternate"
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name = "ecsTaskExecutionRole"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
@@ -104,15 +103,15 @@ resource "aws_iam_role" "ecs_task_execution_role_alternate" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_alternate_policy" {
-  role       = aws_iam_role.ecs_task_execution_role_alternate.name
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
 resource "aws_ecs_task_definition" "hello_task" {
   family                   = "hello-task"
   network_mode             = "awsvpc"
-  requires_compatibilities = ["EC2"]
+  requires_compatibilities = ["FARGATE"]  # Changed to FARGATE
   cpu                      = "256"
   memory                   = "512"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
@@ -128,29 +127,12 @@ resource "aws_ecs_task_definition" "hello_task" {
   }])
 }
 
-resource "aws_instance" "ecs_instances" {
-  count         = 2
-  ami           = "ami-05c172c7f0d3aed00" # Amazon Linux 2 AMI
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.public_subnet.id
-  security_groups = [aws_security_group.ecs.id]  # Corrected the security group attribute
-
-  user_data = <<-EOF
-              #!/bin/bash
-              echo ECS_CLUSTER=${aws_ecs_cluster.main.name} >> /etc/ecs/ecs.config
-              EOF
-
-  tags = {
-    Name = "ECSInstance-${count.index}"
-  }
-}
-
 resource "aws_ecs_service" "hello_service" {
   name            = "hello-service"
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.hello_task.arn
   desired_count   = 1
-  launch_type     = "EC2"
+  launch_type     = "FARGATE"  # Changed to FARGATE
 
   network_configuration {
     subnets          = [aws_subnet.public_subnet.id]
@@ -158,6 +140,3 @@ resource "aws_ecs_service" "hello_service" {
     assign_public_ip = true
   }
 }
-
-
-
