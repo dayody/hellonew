@@ -45,11 +45,6 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
   ip_protocol       = "-1" # semantically equivalent to all ports
 }
 
-resource "aws_ecs_cluster" "main" {
-  name = "hello-cluster"
-}
-
-
 # ECS Cluster
 resource "aws_ecs_cluster" "main" {
   name = "hello-cluster"
@@ -87,7 +82,7 @@ resource "aws_ecs_task_definition" "hello_task" {
   container_definitions = jsonencode([
     {
       name      = "hello-app"
-      image     = "your-docker-image-url"
+      image     = "851725211248.dkr.ecr.eu-west-2.amazonaws.com/hellonew:cbca0212ba368d648cf2acca90930470a7cb7767"
       essential = true
       portMappings = [
         {
@@ -131,24 +126,3 @@ resource "aws_ecs_service" "hello_service" {
   }
 }
 
-resource "aws_ecs_task_definition" "hello_task" {
-  family                   = "hello-task"
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
-
-  container_definitions = jsonencode([
-    {
-      name      = "hello-service"
-      image     = "851725211248.dkr.ecr.eu-west-2.amazonaws.com/hellonew:cbca0212ba368d648cf2acca90930470a7cb7767"
-      essential = true
-      portMappings = [
-        {
-          containerPort = 80
-          hostPort      = 80
-        }
-      ]
-    }
-  ])
-}
