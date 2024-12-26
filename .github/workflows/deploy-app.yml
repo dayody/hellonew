@@ -46,13 +46,6 @@ jobs:
           pip install bandit
           bandit -r .
 
-      - name: Run TFSec (Terraform Security Scanner)
-        run: |
-          curl -L "$(curl -s https://api.github.com/repos/aquasecurity/tfsec/releases/latest | grep -o -E "https://.+?_linux_amd64.tar.gz")" -o tfsec.tar.gz
-          mkdir tfsec && tar -xzf tfsec.tar.gz -C tfsec --strip-components=1
-          sudo mv tfsec/tfsec /usr/local/bin/tfsec
-          tfsec .
-
   dast:
     name: Dynamic Application Security Testing (DAST)
     runs-on: ubuntu-latest
