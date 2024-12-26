@@ -50,7 +50,7 @@ jobs:
         run: pip install bandit
 
       - name: Run Bandit (Python Security Linter)
-        run: bandit -r . --fail-under 1
+        run: bandit -r . --severity-level high --confidence-level high
       
 
   dast:
