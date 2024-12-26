@@ -144,3 +144,6 @@ resource "aws_ecs_service" "hello_service" {
     assign_public_ip = true
   }
 }
+
+
+
