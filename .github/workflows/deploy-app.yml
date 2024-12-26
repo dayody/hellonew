@@ -18,7 +18,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
         with:
-          region: us-west-2 # Specify your AWS region here
+          region: eu-west-2 # Specify your AWS region here
 
       - name: Set environment variables
         run: |
