@@ -119,7 +119,7 @@ resource "aws_instance" "ecs_instances" {
   ami           = "ami-05c172c7f0d3aed00" # Amazon Linux 2 AMI
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.public_subnet.id
-  security_group = aws_security_group.ecs.id  # Corrected the security group attribute
+  security_groups = aws_security_group.ecs.id  # Corrected the security group attribute
 
   user_data = <<-EOF
               #!/bin/bash
