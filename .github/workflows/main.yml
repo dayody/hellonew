@@ -61,13 +61,22 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
 
-      - name: Build and Push Docker Image
+      - name: Build, Tag, and Push the Image to Amazon ECR
+        id: build-image
         env:
-          ECR_REGISTRY: ${{ needs.terraform.outputs.registry }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: hellonew
-          IMAGE_TAG: ${{ needs.terraform.outputs.git-tag }}
+          IMAGE_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
         run: |
+          echo "ECR_REGISTRY: $ECR_REGISTRY"
+          echo "ECR_REPOSITORY: $ECR_REPOSITORY"
+          echo "IMAGE_TAG: $IMAGE_TAG"
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin $ECR_REGISTRY
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Update ECS Service
+        run: |
+          aws ecs update-service --cluster example-cluster --service example-service --force-new-deployment
+
+
+          
