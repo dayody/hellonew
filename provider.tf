@@ -28,6 +28,13 @@ resource "aws_security_group" "ecs" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -76,6 +83,23 @@ resource "aws_instance" "ecs_instances" {
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.subnet.id
   security_groups = [aws_security_group.ecs.id]
+
+  associate_public_ip_address = true  # Ensures EC2 instances get public IPs
+
+  lifecycle {
+    create_before_destroy = true
+  }
+ resource "aws_autoscaling_group" "ecs" {
+  launch_configuration = aws_launch_configuration.ecs.id
+  min_size             = 1
+  max_size             = 3
+  desired_capacity     = 1
+
+  vpc_zone_identifier = ["subnet-0123456789abcdef0"]
+}
+
+  security_groups = [aws_security_group.ecs.id]
+}
 
   user_data = <<-EOF
               #!/bin/bash
