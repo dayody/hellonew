@@ -62,7 +62,7 @@ jobs:
         env:
           ECR_REPOSITORY: hellonew
 
-      - name: Create ECS Cluster
+      - name: Create ECS Cluster if it does not exist
         run: |
           aws ecs describe-clusters --clusters hello-cluster --region eu-west-2 || \
           aws ecs create-cluster --cluster-name hello-cluster --region eu-west-2
