@@ -118,7 +118,7 @@ resource "aws_ecs_task_definition" "hello_task" {
 
   container_definitions = jsonencode([{
     name      = "hello-app"
-    image     = "your-docker-image-url"
+    image     = "851725211248.dkr.ecr.eu-west-2.amazonaws.com/hellonew:53318906e7a3655037468475b704726e9a5faab8"
     essential = true
     portMappings = [{
       containerPort = 80
